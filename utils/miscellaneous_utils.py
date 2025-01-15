@@ -229,3 +229,32 @@ def vis_mp(vis_pc, vis_pc_goal, vis_mp_pos, gt_mp):
     
     open3d.visualization.draw_geometries([pcd, pcd_goal.translate((0.2,0,0)), mani_point.translate(tuple(vis_mp_pos)), \
                                             gt_mani_point.translate(tuple(gt_mp))]) 
+    
+def is_valid_3d_coordinate_frame(v1, v2, v3, tol=1e-9):
+    """
+    Determines whether three vectors form a valid 3D coordinate frame.
+
+    Parameters:
+        v1, v2, v3 (numpy.ndarray): Input vectors of shape (3,).
+        tol (float): Tolerance to handle floating-point errors.
+
+    Returns:
+        bool: True if the vectors form a valid 3D coordinate frame, False otherwise.
+    """
+    # Ensure input vectors are of shape (3,)
+    if not (v1.shape == v2.shape == v3.shape == (3,)):
+        raise ValueError("Each vector must be a numpy array of shape (3,).")
+
+    # Check linear independence by computing the determinant
+    determinant = np.linalg.det(np.stack([v1, v2, v3], axis=1))
+    if abs(determinant) < tol:
+        return False  # Vectors are linearly dependent
+
+    # Check approximate orthogonality of vectors (within tolerance)
+    def is_orthogonal(v1, v2):
+        return abs(np.dot(v1, v2)) < tol
+
+    if not (is_orthogonal(v1, v2) and is_orthogonal(v2, v3) and is_orthogonal(v3, v1)):
+        return False  # Vectors are not orthogonal (considering tolerance)
+
+    return True  # Vectors form a valid 3D coordinate frame

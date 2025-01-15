@@ -184,6 +184,50 @@ def find_min_ang_vec(world_vec, cam_vecs):
 
     return min_ang_vec, min_ang_idx
 
+def object_to_world_frame(points):
+
+    """  
+    Compute 4x4 homogeneous transformation matrix to transform object frame to world frame. 
+    The object frame is obtained by fitting a bounding box to the object partial-view point cloud.
+    The centroid of the bbox is the the origin of the object frame.
+    x, y, z axes are the orientation of the bbox.
+    We then compare these computed axes against the ground-truth axes ([1,0,0], [0,1,0], [0,0,1]) and align them properly.
+    For example, if the computed x-axis is [0.3,0.0,0.95], which is most similar to [0,0,1], this axis would be set to be the new z-axis.
+
+    (Input) points: object partial-view point cloud. Shape (num_pts, 3)
+    """
+
+    # Create a trimesh.Trimesh object from the point cloud
+    point_cloud = trimesh.points.PointCloud(points)
+
+    # Compute the oriented bounding box (OBB) of the point cloud
+    obb = point_cloud.bounding_box_oriented
+
+    homo_mat = obb.primitive.transform
+    axes = obb.primitive.transform[:3,:3]   # x, y, z axes concat together
+
+    # Find and align z axis
+    z_axis = [0., 0., 1.]
+    align_z_axis, min_ang_axis_idx = find_min_ang_vec(z_axis, axes)
+    axes = np.delete(axes, min_ang_axis_idx, axis=1)
+
+    # Find and align x axis.
+    x_axis = [1., 0., 0.]
+    align_x_axis, min_ang_axis_idx = find_min_ang_vec(x_axis, axes) 
+    axes = np.delete(axes, min_ang_axis_idx, axis=1)
+
+    # Find and align y axis
+    y_axis = [0., 1., 0.]
+    align_y_axis, min_ang_axis_idx = find_min_ang_vec(y_axis, axes) 
+
+
+    homo_mat[:3,:3] = np.column_stack((align_x_axis, align_y_axis, align_z_axis))
+
+    assert is_homogeneous_matrix(homo_mat)
+
+    return homo_mat
+
+
 def world_to_object_frame(points):
 
     """  

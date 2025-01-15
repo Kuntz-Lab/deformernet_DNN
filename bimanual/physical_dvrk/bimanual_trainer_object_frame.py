@@ -125,11 +125,11 @@ if __name__ == "__main__":
     # parser.add_argument('--obj_category', default="None", type=str, help="object category. Ex: box_10kPa")
     # parser.add_argument('--batch_size', default=128, type=int, help="batch size for training and testing")
     args = parser.parse_args()
-    args.batch_size = 150
+    args.batch_size = 150   #150
     use_mp_input = True    #False
     
 
-    weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects_object_frame/weights/run1_w_rot_w_MP"
+    weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects_object_frame_gravity/weights/run1_w_rot_w_MP"
     os.makedirs(weight_path, exist_ok=True)
 
     logger = logging.getLogger(weight_path)
@@ -173,6 +173,7 @@ if __name__ == "__main__":
     print("test data: ", len(test_dataset))
     print("data path:", dataset.dataset_path)
     print("Using MP input: ", use_mp_input)
+    print(f"Object list: {object_names}\n")
 
     logger.info(f"\nObject list: {object_names}\n") 
     logger.info(f"Train len: {len(train_dataset)}")    

@@ -56,7 +56,8 @@ def is_homogeneous_matrix(matrix):
         return False
 
     # Check last row
-    if not np.allclose(matrix[3, :], [0, 0, 0, 1]):
+    
+        if not np.allclose(matrix[3, :], [0, 0, 0, 1]):
         return False
 
     # Check rotational part (3x3 upper-left submatrix)
@@ -190,7 +191,7 @@ args = parser.parse_args()
 data_recording_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/multi_{args.obj_category}/data"
 data_processed_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/multi_{args.obj_category}/processed_data_object_frame"
 os.makedirs(data_processed_path, exist_ok=True)
-# assert len(os.listdir(data_processed_path)) == 0
+assert len(os.listdir(data_processed_path)) == 0
 start_time = timeit.default_timer()
 start_index = 1
 max_len_data = 15000
