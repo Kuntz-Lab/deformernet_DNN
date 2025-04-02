@@ -124,6 +124,14 @@ def spherify_point_cloud_open3d(point_cloud, radius=0.002, color=None, vis=False
         open3d.visualization.draw_geometries([combined_mesh])
     return combined_mesh
 
+def create_open3d_sphere(radius=0.002, color=None, translate=None):
+    sphere = open3d.geometry.TriangleMesh.create_sphere(radius=radius)
+    if color is not None:
+        sphere.paint_uniform_color(color)
+    if translate is not None:
+        sphere.translate(tuple(translate))
+    return sphere
+
 def is_homogeneous_matrix(matrix):
     # Check matrix shape
     if matrix.shape != (4, 4):

@@ -129,8 +129,8 @@ if __name__ == "__main__":
     use_mp_input = True    #False
     
 
-    # weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects/weights/run2_w_rot_no_MP"
-    weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects/weights/run3_w_rot_w_MP"
+    weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects/weights/run2_w_rot_no_MP"
+    # weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects_object_frame_final/weights/run1_w_rot_w_MP"
     os.makedirs(weight_path, exist_ok=True)
 
     logger = logging.getLogger(weight_path)

@@ -94,7 +94,7 @@ class SingleBoxDatasetAllObjects(Dataset):
         self.filenames = []
         for object_name in object_names:     
             # single_object_category_dir = os.path.join(self.dataset_path, f"multi_{object_name}/processed_data")
-            single_object_category_dir = os.path.join(self.dataset_path, f"multi_{object_name}/processed_data_object_frame_gravity")       
+            single_object_category_dir = os.path.join(self.dataset_path, f"multi_{object_name}/processed_data_object_frame_final")       
             self.filenames += [os.path.join(single_object_category_dir, file) for file in
                                os.listdir(single_object_category_dir)]
         random.shuffle(self.filenames)

@@ -195,7 +195,7 @@ assert len(os.listdir(data_processed_path)) == 0
 start_time = timeit.default_timer()
 start_index = 1
 max_len_data = 15000
-vis = False
+vis = True
 
 
 with torch.no_grad():

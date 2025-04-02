@@ -207,10 +207,12 @@ class DensePredictorDatasetAllObjects(Dataset):
               
         self.filenames = []
         for object_name in object_names:     
-            single_object_category_dir = os.path.join(self.dataset_path, f"multi_{object_name}/processed_seg_data")       
+            # single_object_category_dir = os.path.join(self.dataset_path, f"multi_{object_name}_multi_cameras/processed_seg_data_object_frame_2")  
+            single_object_category_dir = os.path.join(self.dataset_path, f"multi_{object_name}/processed_seg_data_object_frame")     
             self.filenames += [os.path.join(single_object_category_dir, file) for file in
                                os.listdir(single_object_category_dir)]
         random.shuffle(self.filenames)
+        print("\nself.filenames[0]: ", self.filenames[0])
         
 
     def load_pickle_data(self, filename):

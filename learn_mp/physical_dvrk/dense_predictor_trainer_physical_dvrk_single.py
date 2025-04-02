@@ -37,7 +37,7 @@ def train(model, device, train_loader, optimizer, epoch):
         train_loss += loss.item()
         optimizer.step()
 
-        if batch_idx % 10 == 0:
+        if batch_idx % 100 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(sample), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.batch_size = 100   #150
 
-    weight_path = f"/home/baothach/shape_servo_data/manipulation_points/single_physical_dvrk/all_objects/weights/all_boxes"
+    weight_path = f"/home/baothach/shape_servo_data/manipulation_points/single_physical_dvrk/all_objects/weights/all_boxes_object_frame_multi_cameras_2"
     os.makedirs(weight_path, exist_ok=True)
 
     logger = logging.getLogger(weight_path)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     dataset_path = "/home/baothach/shape_servo_data/manipulation_points/single_physical_dvrk"
     prim_names = ["box"]   #["box", "cylinder", "hemis"]
-    stiffnesses = ["1k", "5k", "10k"]   # ["1k", "5k", "10k"]
+    stiffnesses = ["1k"]   # ["1k", "5k", "10k"]
     object_names = [f"{prim_name}_{stiffness}Pa" for (prim_name, stiffness) in list(product(prim_names, stiffnesses))]
     dataset = DensePredictorDatasetAllObjects(dataset_path, object_names)
 
@@ -135,9 +135,11 @@ if __name__ == "__main__":
     print("training data: ", len(train_dataset))
     print("test data: ", len(test_dataset))
     print("data path:", dataset.dataset_path)
+    print(f"Object list: {object_names}\n")
     logger.info(f"Train len: {len(train_dataset)}")    
     logger.info(f"Test len: {len(test_dataset)}") 
     logger.info(f"Data path: {dataset.dataset_path}\n") 
+    logger.info(f"\nObject list: {object_names}\n") 
 
 
     model = DensePredictor(num_classes=2).to(device)  # single robot

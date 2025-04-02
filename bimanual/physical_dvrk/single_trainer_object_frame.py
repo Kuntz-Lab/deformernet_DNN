@@ -13,8 +13,8 @@ import sys
 sys.path.append("../")
 # from pointcloud_recon_2 import PointNetShapeServo3 as DeformerNet # original partial point cloud
 
-from bimanual_architecture import DeformerNetBimanualRot
-from dataset_loader import SingleBoxDatasetAllObjects
+from architecture_single_arm import DeformerNetMP as DeformerNet
+from dataset_loader_single_object_frame import SingleDatasetAllObjects
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -23,6 +23,9 @@ import logging
 import socket
 import timeit
 
+# trade_off_const = 42  # loss_pos = 10 * loss_rot # run1_w_rot_no_MP 
+trade_off_const = 54.65  # loss_pos = 10 * loss_rot # run1_w_rot_w_MP 
+# trade_off_const = 0.2 # small scale CAO
 
 def train(model, device, train_loader, optimizer, epoch):
     model.train()
@@ -34,22 +37,19 @@ def train(model, device, train_loader, optimizer, epoch):
         pc = sample["pcs"][0].to(device)
         pc_goal = sample["pcs"][1].to(device)
         target_pos = sample["pos"].to(device)
-        target_rot_mat_1 = sample["rot_1"].to(device)       
-        target_rot_mat_2 = sample["rot_2"].to(device)       
+        target_rot_mat = sample["rot"].to(device)       
+  
         
         # print(target_pos[0])
         
         optimizer.zero_grad()
-        pos, rot_mat_1, rot_mat_2 = model(pc, pc_goal)
+        pos, rot_mat = model(pc, pc_goal)
 
         loss_pos = F.mse_loss(pos, target_pos)
-        loss_rot_1 = model.compute_geodesic_loss(target_rot_mat_1, rot_mat_1)     
-        loss_rot_2 = model.compute_geodesic_loss(target_rot_mat_2, rot_mat_2)
-        
-        # loss_rot = (loss_rot_1  + loss_rot_2) * 61.9  # make loss_pos = 10 * loss_rot # run 2 no MP
-        # loss_rot = (loss_rot_1  + loss_rot_2) * 66.6  # make loss_pos = 10 * loss_rot
-        # loss_rot = (loss_rot_1  + loss_rot_2) * 253.7  # make loss_pos = 3 * loss_rot # run 2 with MP
-        loss_rot = (loss_rot_1  + loss_rot_2) * 71.5
+        loss_rot = model.compute_geodesic_loss(target_rot_mat, rot_mat)     
+
+
+        loss_rot *= trade_off_const
         
         loss = loss_pos + loss_rot 
         
@@ -64,17 +64,17 @@ def train(model, device, train_loader, optimizer, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(sample), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
-            print("loss pos, loss rot, ratio loss_rot/loss_pos:", int(loss_pos.detach().cpu().numpy()), 
-                  int(loss_rot.detach().cpu().numpy()), 
-                  loss_rot.detach().cpu().numpy()/loss_pos.detach().cpu().numpy())  # ratio should be ~= 1/3
-            
+            # print("loss pos, loss rot, ratio loss_rot/loss_pos:", int(loss_pos.detach().cpu().numpy()), 
+            #       int(loss_rot.detach().cpu().numpy()), 
+            #       loss_rot.detach().cpu().numpy()/loss_pos.detach().cpu().numpy())  # ratio should be ~= 1/3
+            print(f"loss pos: {loss_pos.item():.4f}, loss rot: {loss_rot.item():.4f}, ratio loss_rot/loss_pos: {loss_rot.item()/loss_pos.item()}")
             
     print('====> Epoch: {} Average loss: {:.6f}'.format(
               epoch, train_loss/num_batch))  
     logger.info('Train: Average loss: {:.6f}'.format(
               train_loss/num_batch))    
-    logger.info("loss pos: {}, loss rot: {}, ratio: {}".format(int(loss_pos.detach().cpu().numpy()), int(loss_rot.detach().cpu().numpy()), loss_rot.detach().cpu().numpy()/loss_pos.detach().cpu().numpy()))  
-
+    # logger.info("loss pos: {}, loss rot: {}, ratio: {}".format(int(loss_pos.detach().cpu().numpy()), int(loss_rot.detach().cpu().numpy()), loss_rot.detach().cpu().numpy()/loss_pos.detach().cpu().numpy()))  
+    logger.info(f"loss pos: {loss_pos.item():.4f}, loss rot: {loss_rot.item():.4f}, ratio: {loss_rot.item()/loss_pos.item()}")
 
 
 
@@ -89,15 +89,15 @@ def test(model, device, test_loader, epoch):
             pc = sample["pcs"][0].to(device)
             pc_goal = sample["pcs"][1].to(device)
             target_pos = sample["pos"].to(device)
-            target_rot_mat_1 = sample["rot_1"].to(device)       
-            target_rot_mat_2 = sample["rot_2"].to(device)           
+            target_rot_mat = sample["rot"].to(device)         
             
-            pos, rot_mat_1, rot_mat_2 = model(pc, pc_goal)
+            pos, rot_mat = model(pc, pc_goal)
 
             loss_pos = F.mse_loss(pos, target_pos, reduction='sum')
-            loss_rot_1 = model.compute_geodesic_loss(target_rot_mat_1, rot_mat_1)     
-            loss_rot_2 = model.compute_geodesic_loss(target_rot_mat_2, rot_mat_2)
-            loss = loss_pos + loss_rot_1 * 1000 + loss_rot_2 * 1000
+            loss_rot = model.compute_geodesic_loss(target_rot_mat, rot_mat)
+            loss_rot *= trade_off_const  # make loss_pos = 3 * loss_rot            
+            loss = loss_pos + loss_rot 
+            
 
             test_loss += loss.item()
 
@@ -125,11 +125,13 @@ if __name__ == "__main__":
     # parser.add_argument('--obj_category', default="None", type=str, help="object category. Ex: box_10kPa")
     # parser.add_argument('--batch_size', default=128, type=int, help="batch size for training and testing")
     args = parser.parse_args()
-    args.batch_size = 150   #150
-    use_mp_input = True    #False
+    args.batch_size = 150
+    use_mp_input = True     # True/False
     
 
-    weight_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk/all_objects_object_frame_5_fix_direction/weights/run1_w_rot_w_MP"
+    # weight_path = f"/home/baothach/shape_servo_data/rotation_extension/single_physical_dvrk/all_objects/weights/run1_w_rot_no_MP"
+    # weight_path = f"/home/baothach/shape_servo_data/rotation_extension/single_physical_dvrk/all_objects_object_frame_2/weights/run2_w_rot_w_MP_scale_4th_channel"
+    weight_path = f"/home/baothach/shape_servo_data/rotation_extension/single_physical_dvrk/all_objects_multi_cameras/weights/run2_w_rot_w_MP"
     os.makedirs(weight_path, exist_ok=True)
 
     logger = logging.getLogger(weight_path)
@@ -147,11 +149,11 @@ if __name__ == "__main__":
     device = torch.device("cuda")
 
     prim_names = ["box"]   #["box", "cylinder", "hemis"]
-    stiffnesses = ["1k", "5k", "10k"]   # ["1k", "5k", "10k"]
+    stiffnesses = ["1k"]   # ["1k", "5k", "10k"]
     object_names = [f"{prim_name}_{stiffness}Pa" for (prim_name, stiffness) in list(product(prim_names, stiffnesses))]
 
-    dataset_path = f"/home/baothach/shape_servo_data/rotation_extension/bimanual_physical_dvrk"
-    dataset = SingleBoxDatasetAllObjects(dataset_path, object_names, use_mp_input)
+    dataset_path = f"/home/baothach/shape_servo_data/rotation_extension/single_physical_dvrk"
+    dataset =SingleDatasetAllObjects(dataset_path, object_names, use_mp_input)
     
     # train_len = 50000     
     # test_len = 1000     
@@ -180,11 +182,12 @@ if __name__ == "__main__":
     logger.info(f"Test len: {len(test_dataset)}") 
     logger.info(f"Data path: {dataset.dataset_path}") 
     logger.info(f"Using MP input: {use_mp_input}\n")
+    logger.info(f"dataset.filenames[0]: {dataset.filenames[0]}")
     
 
-    # model = DeformerNetBimanual(normal_channel=False).to(device)
+    # model = DeformerNetsingle(normal_channel=False).to(device)
     # model = DeformerNetTube(normal_channel=False).to(device)
-    model = DeformerNetBimanualRot(normal_channel=False, use_mp_input=use_mp_input).to(device)
+    model = DeformerNet(normal_channel=False, use_mp_input=use_mp_input).to(device)
     model.apply(weights_init)
     
 

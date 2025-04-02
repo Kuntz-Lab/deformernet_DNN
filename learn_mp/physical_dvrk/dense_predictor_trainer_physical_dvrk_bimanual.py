@@ -44,7 +44,7 @@ def train(model, device, train_loader, optimizer, epoch):
         train_loss += loss.item()
         optimizer.step()
 
-        if batch_idx % 10 == 0:
+        if batch_idx % 100 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(sample), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
@@ -114,7 +114,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.batch_size = 100   #150
 
-    weight_path = f"/home/baothach/shape_servo_data/manipulation_points/bimanual_physical_dvrk/all_objects/weights/all_boxes"
+    # weight_path = f"/home/baothach/shape_servo_data/manipulation_points/bimanual_physical_dvrk/all_objects/weights/all_boxes"
+    weight_path = f"/home/baothach/shape_servo_data/manipulation_points/bimanual_physical_dvrk/all_objects/weights/all_boxes_object_frame"
     os.makedirs(weight_path, exist_ok=True)
 
     logger = logging.getLogger(weight_path)

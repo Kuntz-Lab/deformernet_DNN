@@ -19,9 +19,13 @@ for (prim_name, stiffness) in list(product(prim_names, stiffnesses)):
     
     # os.system(f"python3 process_data_dense_predictor_physical_dvrk_bimanual.py --obj_category {obj_category}")
     # os.system(f"python3 process_data_dense_predictor_physical_dvrk_single.py --obj_category {obj_category}")
+    # os.system(f"python3 process_data_dense_predictor_object_frame_single.py --obj_category {obj_category}")
+    # os.system(f"python3 process_data_dense_predictor_object_frame_bimanual.py --obj_category {obj_category}")
+    # os.system(f"python3 process_data_dense_predictor_object_frame_single_multi_cameras.py --obj_category {obj_category}")
+    # os.system(f"python3 process_data_dense_predictor_object_frame_bimanual.py --obj_category {obj_category}")
 
-    os.system(f"python3 dense_predictor_trainer_physical_dvrk_single.py")
-    os.system(f"python3 dense_predictor_trainer_physical_dvrk_bimanual.py")
+# os.system(f"python3 dense_predictor_trainer_physical_dvrk_single.py")
+os.system(f"python3 dense_predictor_trainer_physical_dvrk_bimanual.py")
     
 
 

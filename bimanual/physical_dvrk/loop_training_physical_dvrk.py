@@ -16,16 +16,20 @@ for (prim_name, stiffness) in list(product(prim_names, stiffnesses)):
         
     obj_category = f"{prim_name}_{stiffness}Pa"
     
-    # # os.system(f"python3 process_data_bimanual_physical_dvrk.py --obj_category {obj_category}")
-    # os.system(f"python3 process_data_object_frame_bimanual_gravity.py --obj_category {obj_category}")
+    # # # os.system(f"python3 process_data_bimanual_physical_dvrk.py --obj_category {obj_category}")
+    # os.system(f"python3 process_data_object_frame_bimanual_5.py --obj_category {obj_category}")
+    # os.system(f"python3 process_data_object_frame_single_scale.py --obj_category {obj_category}")
     
     # os.system(f"python3 bimanual_trainer_all_objects_physical_dvrk.py")
-    os.system(f"python3 bimanual_trainer_object_frame.py")
-    # break
+    
+
 
     # os.system(f"python3 process_data_single_physical_dvrk.py --obj_category {obj_category}")
+    os.system(f"python3 process_data_single_multi_cameras.py --obj_category {obj_category}")
     
-    # os.system(f"python3 bimanual_trainer_all_objects_physical_dvrk.py")
+# os.system(f"python3 bimanual_trainer_all_objects_physical_dvrk.py")
+
+os.system(f"python3 single_trainer_object_frame.py")
 
 print(f"DONE! You burned {(timeit.default_timer() - start_time)/3600} trees" )
     
